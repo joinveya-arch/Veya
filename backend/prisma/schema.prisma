@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ARTIST
+  ADMIN
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artistProfile ArtistProfile?
+  bookings      Booking[]
+  reviews       Review[]
+
+  @@map("users")
+}
+
+model ArtistProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  bio          String?
+  city         String
+  experience   Int
+  instagram    String?
+  verified     Boolean  @default(false)
+  profileImage String?
+  rating       Float    @default(0.0)
+  reviewCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services        Service[]
+  portfolioImages PortfolioImage[]
+  availabilities  Availability[]
+  bookings        Booking[]
+  reviews         Review[]
+
+  @@map("artist_profiles")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  artistId    String
+  title       String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  duration    Int // in minutes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  artist   ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@map("services")
+}
+
+model PortfolioImage {
+  id        String   @id @default(uuid())
+  artistId  String
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_images")
+}
+
+model Availability {
+  id        String             @id @default(uuid())
+  artistId  String
+  date      DateTime
+  status    AvailabilityStatus @default(AVAILABLE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, date])
+  @@map("availabilities")
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  customerId    String
+  artistId      String
+  serviceId     String
+  bookingDate   DateTime
+  bookingStatus BookingStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  customer User          @relation(fields: [customerId], references: [id])
+  artist   ArtistProfile @relation(fields: [artistId], references: [id])
+  service  Service       @relation(fields: [serviceId], references: [id])
+  review   Review?
+
+  @@map("bookings")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  bookingId String   @unique
+  customerId String
+  artistId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  booking  Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer User          @relation(fields: [customerId], references: [id])
+  artist   ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
