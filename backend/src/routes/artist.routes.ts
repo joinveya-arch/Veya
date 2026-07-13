@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { Role } from '@prisma/client';
 import artistController from '../controllers/artist.controller';
+import availabilityController from '../controllers/availability.controller';
+import reviewController from '../controllers/review.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
 import { validateBody, validateQuery } from '../middleware/validate.middleware';
 import { createProfileSchema, updateProfileSchema, queryArtistsSchema } from '../validators/artist.validator';
+import { setAvailabilitySchema, removeAvailabilitySchema } from '../validators/availability.validator';
+import { fileUpload } from '../utils/uploader';
 import asyncHandler from '../utils/asyncHandler';
 
 const router = Router();
@@ -47,6 +51,58 @@ router.put(
 );
 
 /**
+ * @route   POST /api/v1/artists/profile/image
+ * @desc    Upload/replace own profile image (multipart field: "image")
+ * @access  Private (ARTIST only)
+ */
+router.post(
+  '/profile/image',
+  authenticate,
+  authorize(Role.ARTIST),
+  fileUpload.single('image'),
+  asyncHandler(artistController.uploadProfileImage)
+);
+
+/**
+ * @route   POST /api/v1/artists/portfolio
+ * @desc    Add an image to own portfolio (multipart field: "image")
+ * @access  Private (ARTIST only)
+ */
+router.post(
+  '/portfolio',
+  authenticate,
+  authorize(Role.ARTIST),
+  fileUpload.single('image'),
+  asyncHandler(artistController.addPortfolioImage)
+);
+
+/**
+ * @route   POST /api/v1/artists/availability
+ * @desc    Publish future availability slots
+ * @access  Private (ARTIST only)
+ */
+router.post(
+  '/availability',
+  authenticate,
+  authorize(Role.ARTIST),
+  validateBody(setAvailabilitySchema),
+  asyncHandler(availabilityController.setAvailability)
+);
+
+/**
+ * @route   DELETE /api/v1/artists/availability
+ * @desc    Remove availability slots that hold no active bookings
+ * @access  Private (ARTIST only)
+ */
+router.delete(
+  '/availability',
+  authenticate,
+  authorize(Role.ARTIST),
+  validateBody(removeAvailabilitySchema),
+  asyncHandler(availabilityController.removeAvailability)
+);
+
+/**
  * @route   GET /api/v1/artists
  * @desc    List and search public artist profiles with filters
  * @access  Public
@@ -56,6 +112,27 @@ router.get(
   validateQuery(queryArtistsSchema),
   asyncHandler(artistController.listPublicProfiles)
 );
+
+/**
+ * @route   GET /api/v1/artists/:artistId/availability
+ * @desc    List an artist's upcoming available slots
+ * @access  Public
+ */
+router.get('/:artistId/availability', asyncHandler(availabilityController.getAvailability));
+
+/**
+ * @route   GET /api/v1/artists/:artistId/portfolio
+ * @desc    List an artist's portfolio images
+ * @access  Public
+ */
+router.get('/:artistId/portfolio', asyncHandler(artistController.getPortfolioImages));
+
+/**
+ * @route   GET /api/v1/artists/:artistId/reviews
+ * @desc    List the reviews written about an artist
+ * @access  Public
+ */
+router.get('/:artistId/reviews', asyncHandler(reviewController.getArtistReviews));
 
 /**
  * @route   GET /api/v1/artists/:id

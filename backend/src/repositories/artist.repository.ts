@@ -88,6 +88,25 @@ export class ArtistRepository {
   }
 
   /**
+   * Attach a portfolio image to an artist profile
+   */
+  async createPortfolioImage(artistId: string, imageUrl: string) {
+    return prisma.portfolioImage.create({
+      data: { artistId, imageUrl },
+    });
+  }
+
+  /**
+   * List the portfolio images belonging to an artist profile
+   */
+  async findPortfolioImages(artistId: string) {
+    return prisma.portfolioImage.findMany({
+      where: { artistId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
    * Fetch all artist profiles based on optional query search filters (city, experience)
    */
   async findAll(filters: { city?: string; minExperience?: number }) {

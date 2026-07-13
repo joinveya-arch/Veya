@@ -3,6 +3,7 @@ import userRepository from '../repositories/user.repository';
 import { createProfileSchema, updateProfileSchema } from '../validators/artist.validator';
 import { z } from 'zod';
 import { ConflictError, NotFoundError, UnauthorizedError } from '../utils/customErrors';
+import { uploadMedia } from '../utils/cloudinary';
 import { Role } from '@prisma/client';
 
 export type CreateProfileInput = z.infer<typeof createProfileSchema>;
@@ -67,6 +68,43 @@ export class ArtistService {
 
     // 3. Execute update
     return artistRepository.update(profile.id, updateData);
+  }
+
+  /**
+   * Upload a new avatar for the logged-in artist and persist its URL
+   */
+  async updateProfileImage(userId: string, filePath: string) {
+    const profile = await artistRepository.findByUserId(userId);
+    if (!profile) {
+      throw new NotFoundError('Artist profile not found');
+    }
+
+    const imageUrl = await uploadMedia(filePath, 'profiles');
+    return artistRepository.update(profile.id, { profileImage: imageUrl });
+  }
+
+  /**
+   * Upload a portfolio image for the logged-in artist and attach it to the profile
+   */
+  async addPortfolioImage(userId: string, filePath: string) {
+    const profile = await artistRepository.findByUserId(userId);
+    if (!profile) {
+      throw new NotFoundError('Artist profile not found');
+    }
+
+    const imageUrl = await uploadMedia(filePath, 'portfolio');
+    return artistRepository.createPortfolioImage(profile.id, imageUrl);
+  }
+
+  /**
+   * List the portfolio images of a public artist profile
+   */
+  async getPortfolioImages(artistId: string) {
+    const profile = await artistRepository.findById(artistId);
+    if (!profile) {
+      throw new NotFoundError('Artist profile not found');
+    }
+    return artistRepository.findPortfolioImages(artistId);
   }
 
   /**

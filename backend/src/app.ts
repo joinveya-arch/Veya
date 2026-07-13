@@ -9,6 +9,10 @@ import logger from './utils/logger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth.routes';
 import artistRoutes from './routes/artist.routes';
+import serviceRoutes from './routes/service.routes';
+import bookingRoutes from './routes/booking.routes';
+import reviewRoutes from './routes/review.routes';
+import adminRoutes from './routes/admin.routes';
 
 const app: Express = express();
 
@@ -69,6 +73,10 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
 // Route registrations
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/artists', artistRoutes);
+app.use('/api/v1/services', serviceRoutes);
+app.use('/api/v1/bookings', bookingRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // 7. Error Handling Middleware
 app.use(notFoundHandler);

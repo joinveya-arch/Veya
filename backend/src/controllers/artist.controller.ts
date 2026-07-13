@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import artistService from '../services/artist.service';
-import { UnauthorizedError } from '../utils/customErrors';
+import { BadRequestError, UnauthorizedError } from '../utils/customErrors';
 
 export class ArtistController {
   /**
@@ -45,6 +45,53 @@ export class ArtistController {
     res.status(200).json({
       success: true,
       data: profile,
+    });
+  };
+
+  /**
+   * Upload/replace the logged-in artist's profile image (Protected: ARTIST role)
+   */
+  uploadProfileImage = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new UnauthorizedError('User authentication context not found');
+    }
+    if (!req.file) {
+      throw new BadRequestError('No image file was uploaded');
+    }
+
+    const profile = await artistService.updateProfileImage(req.user.id, req.file.path);
+    res.status(200).json({
+      success: true,
+      data: profile,
+    });
+  };
+
+  /**
+   * Add an image to the logged-in artist's portfolio (Protected: ARTIST role)
+   */
+  addPortfolioImage = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new UnauthorizedError('User authentication context not found');
+    }
+    if (!req.file) {
+      throw new BadRequestError('No image file was uploaded');
+    }
+
+    const portfolioImage = await artistService.addPortfolioImage(req.user.id, req.file.path);
+    res.status(201).json({
+      success: true,
+      data: portfolioImage,
+    });
+  };
+
+  /**
+   * List the portfolio images of a specific artist (Public)
+   */
+  getPortfolioImages = async (req: Request, res: Response): Promise<void> => {
+    const images = await artistService.getPortfolioImages(req.params.artistId);
+    res.status(200).json({
+      success: true,
+      data: images,
     });
   };
 

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import { MulterError } from 'multer';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../utils/customErrors';
 import logger from '../utils/logger';
@@ -39,7 +40,15 @@ export const errorHandler = (
       field: issue.path.join('.'),
       message: issue.message,
     }));
-  } 
+  }
+  // Handle Multer upload errors (oversized files, unexpected form fields)
+  else if (err instanceof MulterError) {
+    statusCode = 400;
+    message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'Image exceeds the maximum allowed size of 5MB'
+        : `File upload failed: ${err.message}`;
+  }
   // Handle Prisma Database Errors
   else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
