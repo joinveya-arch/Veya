@@ -118,8 +118,10 @@ gotchas) so work doesn't land half-finished. See [`.claude/skills/`](./.claude/s
 Push to `master` → GitHub Actions builds the **static demo** (mock data, no backend)
 and publishes it to GitHub Pages. See `.github/workflows/deploy.yml`.
 
-**One-time setup:** repo **Settings → Pages → Build and deployment → Source =
-GitHub Actions**. Without it, the workflow goes green but serves nothing.
+The workflow passes `enablement: true` to `configure-pages`, so it **turns Pages on
+itself** on the first run. If that's blocked by org policy, the run fails with
+`Get Pages site failed … Not Found` — fix it by setting **Settings → Pages → Build
+and deployment → Source = GitHub Actions** once, by hand.
 
 The backend is not deployed anywhere.
 
