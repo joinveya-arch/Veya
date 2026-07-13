@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#
+# Blocks a commit whose code changes should have carried doc changes.
+# Installed via ./scripts/install-hooks.sh (sets core.hooksPath).
+#
+# Bypass one commit:  SKIP_DOC_CHECK=1 git commit …
+#
+exec ./scripts/check-docs.sh --staged

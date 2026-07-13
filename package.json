@@ -1,0 +1,11 @@
+{
+  "name": "veya",
+  "private": true,
+  "description": "VEYA — a marketplace for verified makeup artists and hairstylists. Root scripts only; the apps live in frontend/ and backend/.",
+  "scripts": {
+    "check-docs": "./scripts/check-docs.sh",
+    "check-docs:branch": "./scripts/check-docs.sh --branch",
+    "install-hooks": "./scripts/install-hooks.sh",
+    "verify": "npm run check-docs && cd frontend && npx tsc --noEmit && npx next lint"
+  }
+}

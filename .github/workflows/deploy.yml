@@ -1,0 +1,78 @@
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+    # The backend has no bearing on the static demo — don't rebuild for it.
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+# Allow the workflow to publish to Pages via OIDC.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; let an in-flight one finish rather than
+# publishing a half-built site.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      # Serves the app from an in-memory dataset with no API behind it.
+      NEXT_PUBLIC_USE_MOCK: "1"
+      # Project Pages sites are served from /<repo>, so every route and asset
+      # needs that prefix. Derived from the repo name, not hardcoded.
+      NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      # Fail the deploy on a type error rather than shipping a broken demo.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx next lint
+
+      - name: Build static export
+        run: npm run build
+
+      # Pages runs the output through Jekyll by default, which silently drops
+      # every _next/* asset. This opts out.
+      - name: Disable Jekyll
+        run: touch out/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

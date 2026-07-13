@@ -1,0 +1,77 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  docs:
+    name: Docs kept in sync
+    runs-on: ubuntu-latest
+    # On a PR, compare against the base branch. On a direct push to master there's
+    # no base to diff, so this is a no-op — the guard lives on the PR path.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need history to find the merge base
+
+      - name: Check that code changes carry doc changes
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+        run: ./scripts/check-docs.sh --branch
+
+  frontend:
+    name: Frontend — typecheck · lint · build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx next lint
+
+      # Build in demo mode: it exercises the static export AND the mock layer,
+      # which is what actually ships to Pages.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_USE_MOCK: "1"
+
+  backend:
+    name: Backend — typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      # Needed for @prisma/client types; no database required.
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npx tsc --noEmit
