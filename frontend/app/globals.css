@@ -1,0 +1,265 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ============================================================
+   VEYA — Design Tokens
+   Single source of truth. Components compose from the semantic
+   layer below; they never reach for a raw hex.
+   ============================================================ */
+
+@theme {
+  /* ---- Brand ramps ------------------------------------------ */
+  --color-burgundy-50: #f9f0f4;
+  --color-burgundy-100: #f0dbe3;
+  --color-burgundy-200: #ddb4c4;
+  --color-burgundy-300: #c4859f;
+  --color-burgundy-400: #a3567a;
+  --color-burgundy-500: #7f3059;
+  --color-burgundy-600: #4a1028;
+  --color-burgundy-700: #3a0d1f;
+  --color-burgundy-800: #2b0a17;
+  --color-burgundy-900: #1d060f;
+
+  --color-champagne-50: #fbf6e7;
+  --color-champagne-100: #f5e9c4;
+  --color-champagne-200: #ead494;
+  --color-champagne-300: #dfc064;
+  --color-champagne-400: #d4af37;
+  --color-champagne-500: #b8952a;
+  --color-champagne-600: #94761f;
+  --color-champagne-700: #6f5817;
+
+  /* ---- Typography -------------------------------------------
+     General Sans sets headlines (editorial, geometric).
+     Manrope carries body (humanist, high legibility at 16px). */
+  --font-display: "General Sans", "Manrope", "Inter", ui-sans-serif, system-ui,
+    sans-serif;
+  --font-sans: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid scale — desktop-first, degrades without a media query. */
+  --text-display: clamp(2.75rem, 1.7rem + 4.4vw, 4rem); /* → 64 */
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.03em;
+
+  --text-h1: clamp(2.25rem, 1.6rem + 2.6vw, 3rem); /* → 48 */
+  --text-h1--line-height: 1.08;
+  --text-h1--letter-spacing: -0.025em;
+
+  --text-h2: clamp(1.875rem, 1.4rem + 1.9vw, 2.25rem); /* → 36 */
+  --text-h2--line-height: 1.16;
+  --text-h2--letter-spacing: -0.02em;
+
+  --text-h3: clamp(1.5rem, 1.25rem + 1vw, 1.75rem); /* → 28 */
+  --text-h3--line-height: 1.24;
+  --text-h3--letter-spacing: -0.015em;
+
+  --text-h4: 1.375rem; /* 22 */
+  --text-h4--line-height: 1.34;
+  --text-h4--letter-spacing: -0.01em;
+
+  --text-body: 1rem; /* 16 */
+  --text-body--line-height: 1.65;
+
+  --text-caption: 0.875rem; /* 14 */
+  --text-caption--line-height: 1.5;
+
+  /* Overline: the one place tracking is opened up. Used for
+     section eyebrows so headings never need a heavier weight. */
+  --text-overline: 0.75rem; /* 12 */
+  --text-overline--line-height: 1.4;
+  --text-overline--letter-spacing: 0.16em;
+
+  /* ---- Radius ------------------------------------------------ */
+  --radius-input: 14px;
+  --radius-button: 14px;
+  --radius-image: 18px;
+  --radius-card: 20px;
+  --radius-dialog: 24px;
+
+  /* ---- Elevation --------------------------------------------
+     Large blur, low opacity, tinted burgundy. A neutral grey
+     shadow over rose-beige reads as dirt, not depth. */
+  --shadow-subtle: 0 1px 2px rgba(74, 16, 40, 0.04),
+    0 4px 16px -8px rgba(74, 16, 40, 0.06);
+  --shadow-soft: 0 2px 4px rgba(74, 16, 40, 0.03),
+    0 12px 32px -12px rgba(74, 16, 40, 0.1);
+  --shadow-lifted: 0 4px 8px rgba(74, 16, 40, 0.04),
+    0 24px 56px -20px rgba(74, 16, 40, 0.16);
+  --shadow-dialog: 0 32px 80px -24px rgba(29, 6, 15, 0.28);
+
+  /* ---- Motion ------------------------------------------------ */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ---- Semantic surface / text / intent (light) -------------- */
+  --color-background: #f7f3ed;
+  --color-surface: #ffffff;
+  --color-surface-soft: #faf8f6;
+  --color-surface-sunken: #f2ece4;
+  --color-border: #e7ddd6;
+  --color-border-strong: #d8cabf;
+
+  --color-foreground: #1f1b1d;
+  --color-foreground-secondary: #6d6465;
+  --color-foreground-muted: #958a8a;
+
+  --color-primary: #4a1028;
+  --color-primary-hover: #3a0d1f;
+  --color-primary-foreground: #ffffff;
+
+  --color-accent: #d4af37;
+  --color-accent-soft: #fbf6e7;
+  --color-accent-foreground: #3a0d1f;
+
+  --color-success: #3f8c61;
+  --color-success-soft: #edf6f1;
+  --color-warning: #d49a1e;
+  --color-warning-soft: #fdf5e6;
+  --color-error: #b33a3a;
+  --color-error-soft: #fbefef;
+
+  --color-ring: #d4af37;
+}
+
+/* next-themes toggles `class`, so the dark variant keys off .dark */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   Dark — deep warm charcoal, never pure black.
+   Burgundy is too dark to act as a button fill here, so the
+   primary action inverts to warm bone with a wine foreground.
+   Gold carries the brand accent instead.
+   ============================================================ */
+.dark {
+  --color-background: #131011;
+  --color-surface: #1b1718;
+  --color-surface-soft: #201c1d;
+  --color-surface-sunken: #0e0c0d;
+  --color-border: #322c2e;
+  --color-border-strong: #453d40;
+
+  --color-foreground: #f5f1ec;
+  --color-foreground-secondary: #a9a0a0;
+  --color-foreground-muted: #7c7375;
+
+  --color-primary: #f5f1ec;
+  --color-primary-hover: #ffffff;
+  --color-primary-foreground: #1d060f;
+
+  --color-accent: #d4af37;
+  --color-accent-soft: #2a2216;
+  --color-accent-foreground: #f5e9c4;
+
+  --color-success: #5aab7e;
+  --color-success-soft: #16241d;
+  --color-warning: #e0ae42;
+  --color-warning-soft: #2a2114;
+  --color-error: #d05a5a;
+  --color-error-soft: #2b1717;
+
+  --color-ring: #d4af37;
+
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 4px 16px -8px rgba(0, 0, 0, 0.4);
+  --shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.25),
+    0 12px 32px -12px rgba(0, 0, 0, 0.55);
+  --shadow-lifted: 0 4px 8px rgba(0, 0, 0, 0.3),
+    0 24px 56px -20px rgba(0, 0, 0, 0.65);
+  --shadow-dialog: 0 32px 80px -24px rgba(0, 0, 0, 0.75);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.65;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* One focus treatment for the whole app. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-champagne-200);
+    color: var(--color-burgundy-700);
+  }
+}
+
+@layer utilities {
+  /* Prices, ratings, counts — numerals must not wobble on update. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Editorial hairline that opens a section. */
+  .rule {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-border-strong),
+      transparent
+    );
+  }
+
+  /* Fine grain over hero photography: kills gradient banding in the
+     scrim and lends a printed, editorial texture. */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
